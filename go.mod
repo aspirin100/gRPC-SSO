@@ -2,7 +2,10 @@ module github.com/aspirin100/gRPC-SSO/sso
 
 go 1.23.3
 
-require github.com/ilyakaznacheev/cleanenv v1.5.0
+require (
+	github.com/davecgh/go-spew v1.1.1
+	github.com/ilyakaznacheev/cleanenv v1.5.0
+)
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
