@@ -1,0 +1,10 @@
+env: "local"
+
+storage_path: "./storage/sso.db"
+
+accessTokenTTL: 60m
+refreshTokenTTL: 43200m #30 days
+
+grpc:
+  port: 8000
+  timeout: 600m
