@@ -1,7 +1,9 @@
-package grpc
+package grpcApp
 
 import (
+	"fmt"
 	"log/slog"
+	"net"
 
 	grpcAuth "github.com/aspirin100/gRPC-SSO/internal/grpc/auth"
 	"google.golang.org/grpc"
@@ -23,4 +25,33 @@ func New(logg *slog.Logger, port int) *App {
 		gRPCServer: gRPCServer,
 		port:       port,
 	}
+}
+
+func (a *App) Run() error {
+	const op = "grpcApp.Run"
+	logg := a.logg.With(slog.String("op", op))
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
+	if err != nil {
+		return fmt.Errorf("%s:%w", op, err)
+	}
+
+	err = a.gRPCServer.Serve(listener)
+	if err != nil {
+		return fmt.Errorf("failed to run grpc server: %w", err)
+	}
+
+	logg.Info("grpc server is running",
+		slog.String("addr", listener.Addr().String()))
+
+	return nil
+}
+
+func (a *App) GracefulStop() {
+	const op = "grpcApp.Stop"
+	logg := a.logg.With(slog.String("op", op))
+
+	a.gRPCServer.GracefulStop()
+
+	logg.Info("grpc server stopped", slog.Int("port", a.port))
 }
