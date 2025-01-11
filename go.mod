@@ -3,7 +3,7 @@ module github.com/aspirin100/gRPC-SSO
 go 1.23.3
 
 require (
-	github.com/aspirin100/protos v0.0.2
+	github.com/aspirin100/protos v0.0.4
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.69.2
 )

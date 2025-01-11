@@ -27,6 +27,13 @@ func New(logg *slog.Logger, port int) *App {
 	}
 }
 
+func (a *App) MustRun() {
+	err := a.Run()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (a *App) Run() error {
 	const op = "grpcApp.Run"
 	logg := a.logg.With(slog.String("op", op))
@@ -36,13 +43,13 @@ func (a *App) Run() error {
 		return fmt.Errorf("%s:%w", op, err)
 	}
 
+	logg.Info("grpc server is running",
+		slog.String("addr", listener.Addr().String()))
+
 	err = a.gRPCServer.Serve(listener)
 	if err != nil {
 		return fmt.Errorf("failed to run grpc server: %w", err)
 	}
-
-	logg.Info("grpc server is running",
-		slog.String("addr", listener.Addr().String()))
 
 	return nil
 }
