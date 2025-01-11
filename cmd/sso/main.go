@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/aspirin100/gRPC-SSO/sso/internal/config"
+	"github.com/aspirin100/gRPC-SSO/internal/config"
 )
 
 const (
@@ -17,7 +17,7 @@ func main() {
 	_ = cfg
 
 	logg := setupLogger(cfg.Env)
-	logg.Info("logger setuped")
+	logg.Info("logger setuped", slog.String("env", cfg.Env))
 }
 
 func setupLogger(env string) *slog.Logger {
