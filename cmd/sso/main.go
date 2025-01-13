@@ -3,6 +3,8 @@ package main
 import (
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/aspirin100/gRPC-SSO/internal/app"
 	"github.com/aspirin100/gRPC-SSO/internal/config"
@@ -22,8 +24,17 @@ func main() {
 	app := app.New(logg, cfg.GRPC.Port,
 		cfg.StoragePath, cfg.RefreshTTL, cfg.AccessTTL)
 
-	app.GRPCServer.Run()
-	defer app.GRPCServer.GracefulStop()
+	go app.GRPCServer.Run()
+
+	// graceful stop
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	<-stop
+
+	app.GRPCServer.GracefulStop()
+
+	logg.Info("sso server stopped")
 }
 
 func setupLogger(env string) *slog.Logger {
