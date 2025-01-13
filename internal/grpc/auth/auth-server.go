@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	types "github.com/aspirin100/gRPC-SSO/internal"
+	"github.com/aspirin100/gRPC-SSO/internal/entity"
 	ssov1 "github.com/aspirin100/protos/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -19,8 +19,8 @@ const (
 // service layer interface
 type Auth interface {
 	Login(ctx context.Context, email, password string, appID int32) (
-		types.TokenPair, error)
-	Register(ctx context.Context, email, password string) (string, error)
+		entity.TokenPair, error)
+	RegisterUser(ctx context.Context, email, password string) (string, error)
 	IsAdmin(ctx context.Context, userID string) (bool, error)
 }
 
@@ -62,7 +62,7 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 		return nil, fmt.Errorf("register validation error: %w", err)
 	}
 
-	userID, err := s.auth.Register(ctx, req.GetEmail(),
+	userID, err := s.auth.RegisterUser(ctx, req.GetEmail(),
 		req.GetPassword())
 	if err != nil {
 		switch {
