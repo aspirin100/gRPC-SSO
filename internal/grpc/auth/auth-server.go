@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
-	ssov1 "github.com/aspirin100/protos/gen/go/sso"
+	ssov1 "github.com/aspirin100/gRPC-SSO/protos/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
