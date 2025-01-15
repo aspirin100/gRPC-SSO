@@ -10,6 +10,7 @@ import (
 
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
 	"github.com/aspirin100/gRPC-SSO/internal/storage"
+	"github.com/aspirin100/gRPC-SSO/internal/tokens"
 	"github.com/aspirin100/gRPC-SSO/pkg/logger/sl"
 
 	"github.com/google/uuid"
@@ -137,12 +138,35 @@ func (s *Storage) NewRefreshSession(ctx context.Context,
 	return nil
 }
 
+func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken string) error {
+	const op = "storage.sqlite.ValidateRefreshToken"
+
+	var expiresAt time.Time
+
+	err := s.db.GetContext(ctx, &expiresAt, ValidateRefreshTokenQuery, refreshToken)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("%s: %w", op, storage.ErrRefreshTokenNotFound)
+		}
+
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if time.Now().Compare(expiresAt) == 1 ||
+	 time.Now().Compare(expiresAt) == 0{
+		return tokens.ErrInvalidRefreshToken
+	}
+
+	return nil
+}
+
 const (
-	SaveUserQuery          = `insert into users(userID, email, passHash) values($1, $2, $3)`
-	GetUserQuery           = `select (userID, email, passHash) from users where email = $1`
-	IsAdminQuery           = `select (isAdmin) from users where userID = $1`
-	GetAppQuery            = `select (id, name) from apps where id = $1`
-	NewRefreshSessionQuery = `insert into
+	SaveUserQuery             = `insert into users(userID, email, passHash) values($1, $2, $3)`
+	GetUserQuery              = `select (userID, email, passHash) from users where email = $1`
+	IsAdminQuery              = `select (isAdmin) from users where userID = $1`
+	GetAppQuery               = `select (id, name) from apps where id = $1`
+	ValidateRefreshTokenQuery = `select (expiresAt) from refresh_session where refreshToken = $1`
+	NewRefreshSessionQuery    = `insert into
 	refresh_session(sessionID, refreshToken, expiresAt)
 	values($1, $2, $3)`
 )
