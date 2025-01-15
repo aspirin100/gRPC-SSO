@@ -4,6 +4,7 @@ go 1.23.3
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	golang.org/x/crypto v0.32.0
 	google.golang.org/grpc v1.69.4
@@ -12,7 +13,11 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
