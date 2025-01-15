@@ -46,9 +46,9 @@ type AppProvider interface {
 }
 
 type RefreshSessionManager interface {
-	CreateSession(ctx context.Context,
-		userID, refreshToken string, refreshTTL time.Duration) error
-	RefreshTokens(ctx context.Context, refreshToken string) error
+	NewRefreshSession(ctx context.Context,
+		refreshToken string, refreshTTL time.Duration) error
+	ValidateRefreshToken(ctx context.Context, refreshToken string) error
 }
 
 func New(logg *slog.Logger,
@@ -147,8 +147,8 @@ func (a *Auth) Login(ctx context.Context,
 		return nil, fmt.Errorf("failed to create refresh token: %w", err)
 	}
 
-	// inserts new refresh token into database (refresh session table)
-	a.refreshSessionManager.CreateSession(ctx, user.UserID, *refreshToken, a.refreshTTL)
+	// inserts new refresh token into database (refresh_session table)
+	a.refreshSessionManager.NewRefreshSession(ctx, *refreshToken, a.refreshTTL)
 
 	return &entity.TokenPair{
 		AccessToken:  *accessToken,

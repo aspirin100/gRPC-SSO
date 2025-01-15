@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS refresh_session
 (
-    sessionID TEXT PRIMARY KEY,
+    sessionID uuid PRIMARY KEY,
     refreshToken BLOB NOT NULL,
     expiresAt timestamptz NOT NULL
 );

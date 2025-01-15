@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -8,6 +9,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
+)
+
+var (
+	ErrInvalidRefreshToken = errors.New("refresh token is expired")
 )
 
 func NewAccessToken(user entity.User,

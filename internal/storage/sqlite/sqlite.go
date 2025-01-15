@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
 	"github.com/aspirin100/gRPC-SSO/internal/storage"
@@ -44,7 +45,7 @@ func (s *Storage) SaveUser(ctx context.Context,
 
 	queryStatement, err := s.db.Prepare(SaveUserQuery)
 	if err != nil {
-		return "", fmt.Errorf("failed to prepare query: %w", err)
+		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
 	_, err = queryStatement.ExecContext(ctx, userID, email, passHash)
@@ -113,9 +114,35 @@ func (s *Storage) GetApp(ctx context.Context, appID int32) (*entity.App, error) 
 	return &app, nil
 }
 
+func (s *Storage) NewRefreshSession(ctx context.Context,
+	refreshToken string, refreshTTL time.Duration) error {
+	const op = "storage.sqlite.NewRefreshSession"
+
+	queryStatement, err := s.db.Prepare(NewRefreshSessionQuery)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	sessionID := uuid.New()
+
+	_, err = queryStatement.ExecContext(
+		ctx,
+		sessionID,
+		refreshToken,
+		time.Now().Add(refreshTTL))
+	if err != nil {
+		return fmt.Errorf("failed to create new refresh session: %w", err)
+	}
+
+	return nil
+}
+
 const (
-	SaveUserQuery = `insert into users(userID, email, passHash) values($1, $2, $3)`
-	GetUserQuery  = `select (userID, email, passHash) from users where email = $1`
-	IsAdminQuery  = `select (isAdmin) from users where userID = $1`
-	GetAppQuery   = `select (id, name) from apps where id = $1`
+	SaveUserQuery          = `insert into users(userID, email, passHash) values($1, $2, $3)`
+	GetUserQuery           = `select (userID, email, passHash) from users where email = $1`
+	IsAdminQuery           = `select (isAdmin) from users where userID = $1`
+	GetAppQuery            = `select (id, name) from apps where id = $1`
+	NewRefreshSessionQuery = `insert into
+	refresh_session(sessionID, refreshToken, expiresAt)
+	values($1, $2, $3)`
 )
