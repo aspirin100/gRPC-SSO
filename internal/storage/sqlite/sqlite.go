@@ -79,7 +79,22 @@ func (s *Storage) GetUser(ctx context.Context, email string) (*entity.User, erro
 	return &user, nil
 }
 
+func (s *Storage) IsAdmin(ctx context.Context, userID string) (*bool, error) {
+	const op = "storage.sqlite.GetUser"
 
+	var isAdmin *bool
+
+	err := s.db.GetContext(ctx, isAdmin, IsAdminQuery, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+		}
+
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil, nil
+}
 
 const (
 	SaveUserQuery = `insert into users(userID, email, passHash) values($1, $2, $3)`
