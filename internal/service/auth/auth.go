@@ -42,7 +42,7 @@ type UserProvider interface {
 }
 
 type AppProvider interface {
-	GetApp(ctx context.Context, appID int32) (entity.App, error)
+	GetApp(ctx context.Context, appID int32) (*entity.App, error)
 }
 
 type RefreshSessionManager interface {
@@ -137,7 +137,7 @@ func (a *Auth) Login(ctx context.Context,
 
 	logg.Info("user successfully logged")
 
-	accessToken, err := tokens.NewAccessToken(*user, app, a.accessTTL, a.secretKey)
+	accessToken, err := tokens.NewAccessToken(*user, *app, a.accessTTL, a.secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create access token: %w", err)
 	}

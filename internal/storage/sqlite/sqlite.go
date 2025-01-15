@@ -96,8 +96,26 @@ func (s *Storage) IsAdmin(ctx context.Context, userID string) (*bool, error) {
 	return nil, nil
 }
 
+func (s *Storage) GetApp(ctx context.Context, appID int32) (*entity.App, error) {
+	const op = "storage.sqlite.GetUser"
+
+	app := entity.App{}
+
+	err := s.db.GetContext(ctx, &app, GetUserQuery, appID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
+		}
+
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &app, nil
+}
+
 const (
 	SaveUserQuery = `insert into users(userID, email, passHash) values($1, $2, $3)`
 	GetUserQuery  = `select (userID, email, passHash) from users where email = $1`
 	IsAdminQuery  = `select (isAdmin) from users where userID = $1`
+	GetAppQuery   = `select (id, name) from apps where id = $1`
 )
