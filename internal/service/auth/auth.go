@@ -25,6 +25,7 @@ type Auth struct {
 	usrProvider           UserProvider
 	appProvider           AppProvider
 	refreshSessionManager RefreshSessionManager
+	secretKey             []byte
 	accessTTL             time.Duration
 	refreshTTL            time.Duration
 }
@@ -47,6 +48,7 @@ type AppProvider interface {
 type RefreshSessionManager interface {
 	CreateSession(ctx context.Context,
 		userID, refreshToken string, refreshTTL time.Duration) error
+	RefreshTokens(ctx context.Context, refreshToken string) error
 }
 
 func New(logg *slog.Logger,
@@ -135,7 +137,7 @@ func (a *Auth) Login(ctx context.Context,
 
 	logg.Info("user successfully logged")
 
-	accessToken, err := tokens.NewAccessToken(user, app, a.accessTTL)
+	accessToken, err := tokens.NewAccessToken(user, app, a.accessTTL, a.secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create access token: %w", err)
 	}

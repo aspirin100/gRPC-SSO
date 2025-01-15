@@ -10,7 +10,11 @@ import (
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
 )
 
-func NewAccessToken(user entity.User, app entity.App, ttl time.Duration) (*string, error) {
+func NewAccessToken(user entity.User,
+	app entity.App,
+	ttl time.Duration,
+	secretKey []byte) (
+	*string, error) {
 	claims := jwt.MapClaims{
 		"appID":     app.ID,
 		"userID":    user.UserID,
@@ -20,7 +24,7 @@ func NewAccessToken(user entity.User, app entity.App, ttl time.Duration) (*strin
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signed, err := token.SignedString([]byte(app.SecretKey))
+	signed, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return nil, fmt.Errorf("jwt token signing failure: %w", err)
 	}

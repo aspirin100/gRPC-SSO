@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users
     id        UUID PRIMARY KEY,
     refreshSessionID UUID,
     email     TEXT NOT NULL UNIQUE,
-    pass_hash BLOB NOT NULL,
+    passHash BLOB NOT NULL,
     FOREIGN KEY (refreshSessionID) REFERENCES refresh_session(sessionID)
 );
 CREATE INDEX IF NOT EXISTS idx_email ON users (email);
