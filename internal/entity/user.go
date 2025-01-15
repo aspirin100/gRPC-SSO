@@ -1,7 +1,7 @@
 package entity
 
 type User struct {
-	UserID   string
-	Email    string
-	PassHash []byte
+	UserID   string `db:"userID"`
+	Email    string `db:"email"`
+	PassHash []byte `db:"passHash"`
 }

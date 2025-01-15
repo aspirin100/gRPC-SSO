@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/aspirin100/gRPC-SSO/internal/entity"
 	"github.com/aspirin100/gRPC-SSO/internal/storage"
 	"github.com/aspirin100/gRPC-SSO/pkg/logger/sl"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/mattn/go-sqlite3"
 )
 
 type Storage struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 func New(logg *slog.Logger, storagePath string) (*Storage, error) {
@@ -23,7 +25,7 @@ func New(logg *slog.Logger, storagePath string) (*Storage, error) {
 
 	log := logg.With(slog.String("op", op))
 
-	db, err := sql.Open("sqlite3", storagePath)
+	db, err := sqlx.Open("sqlite3", storagePath)
 	if err != nil {
 		log.Error("db open error", sl.Err(err))
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
@@ -60,9 +62,27 @@ func (s *Storage) SaveUser(ctx context.Context,
 	return userID, nil
 }
 
+func (s *Storage) GetUser(ctx context.Context, email string) (*entity.User, error) {
+	const op = "storage.sqlite.GetUser"
+
+	user := entity.User{}
+
+	err := s.db.GetContext(ctx, &user, GetUserQuery, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+		}
+
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &user, nil
+}
+
 
 
 const (
 	SaveUserQuery = `insert into users(userID, email, passHash) values($1, $2, $3)`
-	GetUserQuery = `select (userID, email, passHash) from users where email = $1`
+	GetUserQuery  = `select (userID, email, passHash) from users where email = $1`
+	IsAdminQuery  = `select (isAdmin) from users where userID = $1`
 )

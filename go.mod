@@ -7,6 +7,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.24
 	golang.org/x/crypto v0.32.0
 	google.golang.org/grpc v1.69.4

@@ -37,8 +37,8 @@ type UserSaver interface {
 }
 
 type UserProvider interface {
-	IsAdmin(ctx context.Context, userID string) (bool, error)
-	GetUser(ctx context.Context, email string) (entity.User, error)
+	IsAdmin(ctx context.Context, userID string) (*bool, error)
+	GetUser(ctx context.Context, email string) (*entity.User, error)
 }
 
 type AppProvider interface {
@@ -137,7 +137,7 @@ func (a *Auth) Login(ctx context.Context,
 
 	logg.Info("user successfully logged")
 
-	accessToken, err := tokens.NewAccessToken(user, app, a.accessTTL, a.secretKey)
+	accessToken, err := tokens.NewAccessToken(*user, app, a.accessTTL, a.secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create access token: %w", err)
 	}
@@ -168,5 +168,5 @@ func (a *Auth) IsAdmin(ctx context.Context, userID string) (
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &isAdmin, nil
+	return isAdmin, nil
 }
