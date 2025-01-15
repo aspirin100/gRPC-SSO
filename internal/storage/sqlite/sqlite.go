@@ -138,12 +138,12 @@ func (s *Storage) NewRefreshSession(ctx context.Context,
 	return nil
 }
 
-func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken string) error {
+func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID string) error {
 	const op = "storage.sqlite.ValidateRefreshToken"
 
 	var expiresAt time.Time
 
-	err := s.db.GetContext(ctx, &expiresAt, ValidateRefreshTokenQuery, refreshToken)
+	err := s.db.GetContext(ctx, &expiresAt, ValidateRefreshTokenQuery, refreshToken, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("%s: %w", op, storage.ErrRefreshTokenNotFound)
@@ -153,7 +153,7 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken string)
 	}
 
 	if time.Now().Compare(expiresAt) == 1 ||
-	 time.Now().Compare(expiresAt) == 0{
+		time.Now().Compare(expiresAt) == 0 {
 		return tokens.ErrInvalidRefreshToken
 	}
 
@@ -161,12 +161,12 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken string)
 }
 
 const (
-	SaveUserQuery             = `insert into users(userID, email, passHash) values($1, $2, $3)`
-	GetUserQuery              = `select (userID, email, passHash) from users where email = $1`
-	IsAdminQuery              = `select (isAdmin) from users where userID = $1`
-	GetAppQuery               = `select (id, name) from apps where id = $1`
-	ValidateRefreshTokenQuery = `select (expiresAt) from refresh_session where refreshToken = $1`
+	SaveUserQuery             = `insert into users(userID, email, passHash) values(?, ?, ?)`
+	GetUserQuery              = `select (userID, email, passHash) from users where email = ?`
+	IsAdminQuery              = `select (isAdmin) from users where userID = ?`
+	GetAppQuery               = `select (id, name) from apps where id = ?`
+	ValidateRefreshTokenQuery = `select (expiresAt) from refresh_session where refreshToken = ? AND userID = ?`
 	NewRefreshSessionQuery    = `insert into
 	refresh_session(sessionID, refreshToken, expiresAt)
-	values($1, $2, $3)`
+	values(?, ?, ?)`
 )

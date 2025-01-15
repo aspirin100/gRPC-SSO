@@ -22,6 +22,7 @@ type Auth interface {
 		entity.TokenPair, error)
 	RegisterUser(ctx context.Context, email, password string) (string, error)
 	IsAdmin(ctx context.Context, userID string) (bool, error)
+	RefreshTokenPair(ctx context.Context, userID, refreshToken string) (entity.TokenPair, error)
 }
 
 type serverAPI struct {
@@ -34,7 +35,7 @@ func Register(gRPC *grpc.Server, auth Auth) {
 }
 
 func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (
-	*ssov1.LoginResponse, error) {
+	*ssov1.NewTokenPairResponse, error) {
 	err := validateLogin(req)
 	if err != nil {
 		return nil, fmt.Errorf("login validation error: %w", err)
@@ -49,7 +50,7 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (
 		}
 	}
 
-	return &ssov1.LoginResponse{
+	return &ssov1.NewTokenPairResponse{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}, nil
@@ -72,6 +73,28 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 	}
 	return &ssov1.RegisterRespons{
 		UserID: userID,
+	}, nil
+}
+
+func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequest) (
+	*ssov1.NewTokenPairResponse, error) {
+	err := validateRefreshRequest(req)
+	if err != nil {
+		return nil, fmt.Errorf("login validation error: %w", err)
+	}
+
+	tokens, err := s.auth.RefreshTokenPair(ctx, req.GetUserID(),
+		req.GetRefreshToken())
+	if err != nil {
+		switch {
+		default:
+			return nil, status.Error(codes.Internal, "internal error")
+		}
+	}
+
+	return &ssov1.NewTokenPairResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
 	}, nil
 }
 
@@ -122,6 +145,18 @@ func validateRegister(req *ssov1.RegisterRequest) error {
 		return status.Error(codes.InvalidArgument, "password is required")
 	} else if len(req.GetPassword()) > passwordMaxLen {
 		return status.Error(codes.InvalidArgument, "password is too big")
+	}
+
+	return nil
+}
+
+func validateRefreshRequest(req *ssov1.RefreshRequest) error {
+	if req.GetRefreshToken() == "" {
+		return status.Error(codes.InvalidArgument, "refresh token is required")
+	}
+
+	if req.GetUserID() == "" {
+		return status.Error(codes.InvalidArgument, "user id is required")
 	}
 
 	return nil
