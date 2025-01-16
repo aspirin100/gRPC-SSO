@@ -20,17 +20,21 @@ var (
 )
 
 type Auth struct {
-	logg                  *slog.Logger
-	usrSaver              UserSaver
-	usrProvider           UserProvider
-	appProvider           AppProvider
-	refreshSessionManager RefreshSessionManager
-	secretKey             []byte
-	accessTTL             time.Duration
-	refreshTTL            time.Duration
+	logg        *slog.Logger
+	authManager AuthManager
+	secretKey   []byte
+	accessTTL   time.Duration
+	refreshTTL  time.Duration
 }
 
-// storage interfaces but extendable
+type AuthManager interface {
+	UserSaver
+	UserProvider
+	AppProvider
+	RefreshSessionManager
+}
+
+// storage interfaces
 type UserSaver interface {
 	SaveUser(ctx context.Context,
 		email string,
@@ -53,21 +57,15 @@ type RefreshSessionManager interface {
 }
 
 func New(logg *slog.Logger,
-	usrSaver UserSaver,
-	usrProvider UserProvider,
-	appProvider AppProvider,
-	refreshSessionManager RefreshSessionManager,
+	authManager AuthManager,
 	accessTTL,
 	refreshTTL time.Duration) *Auth {
 
 	return &Auth{
-		logg:                  logg,
-		usrSaver:              usrSaver,
-		usrProvider:           usrProvider,
-		appProvider:           appProvider,
-		refreshSessionManager: refreshSessionManager,
-		accessTTL:             accessTTL,
-		refreshTTL:            refreshTTL,
+		logg:        logg,
+		authManager: authManager,
+		accessTTL:   accessTTL,
+		refreshTTL:  refreshTTL,
 	}
 }
 
@@ -85,7 +83,7 @@ func (a *Auth) RegisterUser(ctx context.Context,
 		return nil, fmt.Errorf("password hashing error: %w", err)
 	}
 
-	userID, err := a.usrSaver.SaveUser(ctx, email, passHash)
+	userID, err := a.authManager.SaveUser(ctx, email, passHash)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			logg.Warn("user already exists", sl.Err(err))
@@ -108,7 +106,7 @@ func (a *Auth) Login(ctx context.Context,
 
 	logg := a.logg.With(slog.String("op", op))
 
-	user, err := a.usrProvider.GetUser(ctx, email)
+	user, err := a.authManager.GetUser(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			logg.Info("user not found", sl.Err(err))
@@ -125,7 +123,7 @@ func (a *Auth) Login(ctx context.Context,
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
-	app, err := a.appProvider.GetApp(ctx, appID)
+	app, err := a.authManager.GetApp(ctx, appID)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
 			logg.Error("app not found", sl.Err(err))
@@ -149,7 +147,7 @@ func (a *Auth) Login(ctx context.Context,
 	}
 
 	// inserts new refresh token into database (refresh_session table)
-	err = a.refreshSessionManager.NewRefreshSession(ctx, user.UserID,
+	err = a.authManager.NewRefreshSession(ctx, user.UserID,
 		*refreshToken, a.refreshTTL)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -167,7 +165,7 @@ func (a *Auth) IsAdmin(ctx context.Context, userID string) (
 
 	logg := a.logg.With(slog.String("op", op))
 
-	isAdmin, err := a.usrProvider.IsAdmin(ctx, userID)
+	isAdmin, err := a.authManager.IsAdmin(ctx, userID)
 	if err != nil {
 		logg.Error("checking if user is admin failed", sl.Err(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -184,7 +182,7 @@ func (a *Auth) RefreshTokenPair(
 
 	logg := a.logg.With(slog.String("op", op))
 
-	err := a.refreshSessionManager.ValidateRefreshToken(ctx, userID, refreshToken)
+	err := a.authManager.ValidateRefreshToken(ctx, userID, refreshToken)
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrUserNotFound):
@@ -213,7 +211,7 @@ func (a *Auth) RefreshTokenPair(
 	}
 
 	// inserts new refresh token into database (refresh_session table)
-	err = a.refreshSessionManager.NewRefreshSession(ctx, userID,
+	err = a.authManager.NewRefreshSession(ctx, userID,
 		*newRefreshToken, a.refreshTTL)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
