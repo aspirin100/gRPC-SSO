@@ -22,7 +22,8 @@ type Auth interface {
 		entity.TokenPair, error)
 	RegisterUser(ctx context.Context, email, password string) (string, error)
 	IsAdmin(ctx context.Context, userID string) (bool, error)
-	RefreshTokenPair(ctx context.Context, userID, refreshToken string) (entity.TokenPair, error)
+	RefreshTokenPair(ctx context.Context,
+		userID, refreshToken string, appID int32) (entity.TokenPair, error)
 }
 
 type serverAPI struct {
@@ -30,7 +31,7 @@ type serverAPI struct {
 	auth Auth
 }
 
-func Register(gRPC *grpc.Server, auth Auth) {
+func RegisterAuthServer(gRPC *grpc.Server, auth Auth) {
 	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
 }
 
@@ -84,7 +85,7 @@ func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequ
 	}
 
 	tokens, err := s.auth.RefreshTokenPair(ctx, req.GetUserID(),
-		req.GetRefreshToken())
+		req.GetRefreshToken(), req.GetAppID())
 	if err != nil {
 		switch {
 		default:

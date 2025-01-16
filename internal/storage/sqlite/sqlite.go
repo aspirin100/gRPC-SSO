@@ -115,8 +115,10 @@ func (s *Storage) GetApp(ctx context.Context, appID int32) (*entity.App, error) 
 	return &app, nil
 }
 
-func (s *Storage) NewRefreshSession(ctx context.Context,
-	refreshToken string, refreshTTL time.Duration) error {
+func (s *Storage) NewRefreshSession(
+	ctx context.Context,
+	refreshToken, userID string,
+	refreshTTL time.Duration) error {
 	const op = "storage.sqlite.NewRefreshSession"
 
 	queryStatement, err := s.db.Prepare(NewRefreshSessionQuery)
@@ -124,11 +126,9 @@ func (s *Storage) NewRefreshSession(ctx context.Context,
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	sessionID := uuid.New()
-
 	_, err = queryStatement.ExecContext(
 		ctx,
-		sessionID,
+		userID,
 		refreshToken,
 		time.Now().Add(refreshTTL))
 	if err != nil {
@@ -158,7 +158,7 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if result.isUsed{
+	if result.isUsed {
 		return tokens.ErrInvalidRefreshToken
 	}
 	if time.Now().Compare(result.expiresAt) == 1 ||

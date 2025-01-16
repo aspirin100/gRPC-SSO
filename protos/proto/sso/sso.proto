@@ -41,5 +41,6 @@ message IsAdminResponse{
 message RefreshRequest{
     string userID = 1; //UUID
     string refreshToken = 2;
+    int32 appID = 3;
 }
 
