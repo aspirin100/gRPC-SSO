@@ -67,18 +67,18 @@ func (s *Storage) SaveUser(ctx context.Context,
 func (s *Storage) GetUser(ctx context.Context, email string) (*entity.User, error) {
 	const op = "storage.sqlite.GetUser"
 
-	user := entity.User{}
+	user := &entity.User{}
 
-	err := s.db.GetContext(ctx, &user, GetUserQuery, email)
+	err := s.db.GetContext(ctx, user, GetUserQuery, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+			return nil, storage.ErrUserNotFound
 		}
 
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (s *Storage) IsAdmin(ctx context.Context, userID string) (*bool, error) {
@@ -176,10 +176,10 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 
 const (
 	SaveUserQuery             = `insert into users(id, email, passHash) values(?, ?, ?)`
-	GetUserQuery              = `select (userID, email, passHash) from users where email = ?`
-	IsAdminQuery              = `select (isAdmin) from users where userID = ?`
-	GetAppQuery               = `select (id, name) from apps where id = ?`
-	ValidateRefreshTokenQuery = `select (expiresAt, isUsed) from refresh_session
+	GetUserQuery              = `select id, email, passHash from users where email = ?`
+	IsAdminQuery              = `select isAdmin from users where userID = ?`
+	GetAppQuery               = `select id, name from apps where id = ?`
+	ValidateRefreshTokenQuery = `select expiresAt, isUsed from refresh_session
 	where refreshToken = ? AND userID = ?`
 	SetRefreshTokenUsedQuery = `update table refresh_session set isUsed = true where refreshToken = ?`
 	NewRefreshSessionQuery   = `insert into

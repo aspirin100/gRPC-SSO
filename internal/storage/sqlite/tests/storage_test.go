@@ -49,5 +49,29 @@ func TestSaveUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
+	cases := []struct {
+		testName    string
+		email       string
+		expectedErr error
+	}{
+		{
+			testName:    "ok case",
+			email:       "test-mail",
+			expectedErr: nil,
+		},
+		{
+			testName:    "user exists case",
+			email:       "wrong-test-mail",
+			expectedErr: storage.ErrUserNotFound,
+		},
+	}
 
+	for _, tcase := range cases {
+		t.Run(tcase.testName, func(t *testing.T) {
+			_, err := Storage.GetUser(context.Background(),
+				tcase.email)
+
+			require.EqualValues(t, tcase.expectedErr, err)
+		})
+	}
 }
