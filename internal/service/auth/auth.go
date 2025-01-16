@@ -30,6 +30,7 @@ type Auth struct {
 	refreshTTL            time.Duration
 }
 
+// storage interfaces but extendable
 type UserSaver interface {
 	SaveUser(ctx context.Context,
 		email string,
@@ -47,8 +48,8 @@ type AppProvider interface {
 
 type RefreshSessionManager interface {
 	NewRefreshSession(ctx context.Context,
-		refreshToken string, refreshTTL time.Duration) error
-	ValidateRefreshToken(ctx context.Context, refreshToken string) error
+		userID, refreshToken string, refreshTTL time.Duration) error
+	ValidateRefreshToken(ctx context.Context, userID, refreshToken string) error
 }
 
 func New(logg *slog.Logger,
@@ -137,7 +138,7 @@ func (a *Auth) Login(ctx context.Context,
 
 	logg.Info("user successfully logged")
 
-	accessToken, err := tokens.NewAccessToken(*user, *app, a.accessTTL, a.secretKey)
+	accessToken, err := tokens.NewAccessToken(user.UserID, app.ID, a.accessTTL, a.secretKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create access token: %w", err)
 	}
@@ -148,7 +149,11 @@ func (a *Auth) Login(ctx context.Context,
 	}
 
 	// inserts new refresh token into database (refresh_session table)
-	a.refreshSessionManager.NewRefreshSession(ctx, *refreshToken, a.refreshTTL)
+	err = a.refreshSessionManager.NewRefreshSession(ctx, user.UserID,
+		*refreshToken, a.refreshTTL)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
 	return &entity.TokenPair{
 		AccessToken:  *accessToken,
@@ -169,4 +174,53 @@ func (a *Auth) IsAdmin(ctx context.Context, userID string) (
 	}
 
 	return isAdmin, nil
+}
+
+func (a *Auth) RefreshTokenPair(
+	ctx context.Context,
+	userID, refreshToken string,
+	appID int32) (*entity.TokenPair, error) {
+	const op = "service/auth.RefreshTokenPair"
+
+	logg := a.logg.With(slog.String("op", op))
+
+	err := a.refreshSessionManager.ValidateRefreshToken(ctx, userID, refreshToken)
+	if err != nil {
+		switch {
+		case errors.Is(err, storage.ErrUserNotFound):
+			logg.Info("user not found", sl.Err(err))
+			return nil, storage.ErrUserNotFound
+		case errors.Is(err, storage.ErrRefreshTokenNotFound):
+			logg.Info("refresh token not found", sl.Err(err))
+			return nil, storage.ErrRefreshTokenNotFound
+		case errors.Is(err, tokens.ErrInvalidRefreshToken):
+			logg.Info("refresh token is invalid", sl.Err(err))
+			return nil, tokens.ErrInvalidRefreshToken
+		default:
+			logg.Error("validate refresh token error", sl.Err(err))
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
+	accessToken, err := tokens.NewAccessToken(userID, appID, a.accessTTL, a.secretKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create access token: %w", err)
+	}
+
+	newRefreshToken, err := tokens.NewRefreshToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
+	// inserts new refresh token into database (refresh_session table)
+	err = a.refreshSessionManager.NewRefreshSession(ctx, userID,
+		*newRefreshToken, a.refreshTTL)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &entity.TokenPair{
+		AccessToken:  *accessToken,
+		RefreshToken: *newRefreshToken,
+	}, nil
 }

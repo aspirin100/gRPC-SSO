@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS refresh_session
     userID uuid PRIMARY KEY,
     refreshToken BLOB NOT NULL,
     expiresAt timestamptz NOT NULL,
+    isUsed BOOL DEFAULT FALSE,
     FOREIGN KEY (userID) REFERENCES users(id)
 );
 CREATE TABLE IF NOT EXISTS apps

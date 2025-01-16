@@ -12,15 +12,13 @@ import (
 func TestNewAccessToken(t *testing.T) {
 	user := entity.User{
 		UserID: "some test user id",
-		Email:  "test@example.com",
 	}
 
 	app := entity.App{
-		ID:   1,
-		Name: "test-app-name",
+		ID: 1,
 	}
 
-	token, err := tokens.NewAccessToken(user, app, time.Minute*15, []byte("secret_test_key"))
+	token, err := tokens.NewAccessToken(user.UserID, app.ID, time.Minute*15, []byte("secret_test_key"))
 	if err != nil {
 		log.Print(err)
 		t.Fail()

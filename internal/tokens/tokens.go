@@ -7,23 +7,20 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-
-	"github.com/aspirin100/gRPC-SSO/internal/entity"
 )
 
 var (
 	ErrInvalidRefreshToken = errors.New("refresh token is expired")
 )
 
-func NewAccessToken(user entity.User,
-	app entity.App,
+func NewAccessToken(userID string,
+	appID int32,
 	ttl time.Duration,
 	secretKey []byte) (
 	*string, error) {
 	claims := jwt.MapClaims{
-		"appID":     app.ID,
-		"userID":    user.UserID,
-		"email":     user.Email,
+		"appID":     appID,
+		"userID":    userID,
 		"expiresAt": time.Now().Add(ttl).Unix(),
 	}
 

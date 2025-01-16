@@ -141,9 +141,15 @@ func (s *Storage) NewRefreshSession(ctx context.Context,
 func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID string) error {
 	const op = "storage.sqlite.ValidateRefreshToken"
 
-	var expiresAt time.Time
+	result := struct {
+		expiresAt time.Time `db:"expiresAt"`
+		isUsed    bool      `db:"isUsed"`
+	}{}
 
-	err := s.db.GetContext(ctx, &expiresAt, ValidateRefreshTokenQuery, refreshToken, userID)
+	err := s.db.GetContext(ctx,
+		&result,
+		ValidateRefreshTokenQuery,
+		refreshToken, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("%s: %w", op, storage.ErrRefreshTokenNotFound)
@@ -152,9 +158,17 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if time.Now().Compare(expiresAt) == 1 ||
-		time.Now().Compare(expiresAt) == 0 {
+	if result.isUsed{
 		return tokens.ErrInvalidRefreshToken
+	}
+	if time.Now().Compare(result.expiresAt) == 1 ||
+		time.Now().Compare(result.expiresAt) == 0 {
+		return tokens.ErrInvalidRefreshToken
+	}
+
+	_, err = s.db.ExecContext(ctx, SetRefreshTokenUsedQuery, refreshToken)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
@@ -165,8 +179,10 @@ const (
 	GetUserQuery              = `select (userID, email, passHash) from users where email = ?`
 	IsAdminQuery              = `select (isAdmin) from users where userID = ?`
 	GetAppQuery               = `select (id, name) from apps where id = ?`
-	ValidateRefreshTokenQuery = `select (expiresAt) from refresh_session where refreshToken = ? AND userID = ?`
-	NewRefreshSessionQuery    = `insert into
-	refresh_session(sessionID, refreshToken, expiresAt)
+	ValidateRefreshTokenQuery = `select (expiresAt, isUsed) from refresh_session
+	where refreshToken = ? AND userID = ?`
+	SetRefreshTokenUsedQuery = `update table refresh_session set isUsed = true where refreshToken = ?`
+	NewRefreshSessionQuery   = `insert into
+	refresh_session(userID, refreshToken, expiresAt)
 	values(?, ?, ?)`
 )
