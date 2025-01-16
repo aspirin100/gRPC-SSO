@@ -16,7 +16,7 @@ var (
 func NewAccessToken(userID string,
 	appID int32,
 	ttl time.Duration,
-	secretKey []byte) (
+	secretKey string) (
 	*string, error) {
 	claims := jwt.MapClaims{
 		"appID":     appID,

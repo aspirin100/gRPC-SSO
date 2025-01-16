@@ -22,7 +22,7 @@ var (
 type Auth struct {
 	logg        *slog.Logger
 	authManager AuthManager
-	secretKey   []byte
+	secretKey   string
 	accessTTL   time.Duration
 	refreshTTL  time.Duration
 }

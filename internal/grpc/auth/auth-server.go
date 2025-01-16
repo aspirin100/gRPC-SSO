@@ -19,11 +19,11 @@ const (
 // service layer interface
 type Auth interface {
 	Login(ctx context.Context, email, password string, appID int32) (
-		entity.TokenPair, error)
-	RegisterUser(ctx context.Context, email, password string) (string, error)
-	IsAdmin(ctx context.Context, userID string) (bool, error)
+		*entity.TokenPair, error)
+	RegisterUser(ctx context.Context, email, password string) (*string, error)
+	IsAdmin(ctx context.Context, userID string) (*bool, error)
 	RefreshTokenPair(ctx context.Context,
-		userID, refreshToken string, appID int32) (entity.TokenPair, error)
+		userID, refreshToken string, appID int32) (*entity.TokenPair, error)
 }
 
 type serverAPI struct {
@@ -73,7 +73,7 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 		}
 	}
 	return &ssov1.RegisterRespons{
-		UserID: userID,
+		UserID: *userID,
 	}, nil
 }
 
@@ -114,7 +114,7 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (
 	}
 
 	return &ssov1.IsAdminResponse{
-		IsAdmin: isAdmin,
+		IsAdmin: *isAdmin,
 	}, nil
 }
 

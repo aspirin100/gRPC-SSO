@@ -18,7 +18,7 @@ func TestNewAccessToken(t *testing.T) {
 		ID: 1,
 	}
 
-	token, err := tokens.NewAccessToken(user.UserID, app.ID, time.Minute*15, []byte("secret_test_key"))
+	token, err := tokens.NewAccessToken(user.UserID, app.ID, time.Minute*15, "secret_test_key")
 	if err != nil {
 		log.Print(err)
 		t.Fail()
