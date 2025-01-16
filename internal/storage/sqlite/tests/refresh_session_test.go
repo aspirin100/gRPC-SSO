@@ -11,14 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var userID = "48fd672b-81cb-4a37-a33f-8e2b1e0031d5"
+var refreshTokenPrepared = "e8072fc7dfc55a232794a3b8d14e16c4e997bc5f490cd9cd57c8d4e8ff194554"
+
 func TestNewRefreshSession(t *testing.T) {
 	refreshToken, err := tokens.NewRefreshToken()
 	if err != nil {
 		log.Print(err)
 		t.Fail()
 	}
-
-	userID := "855ef14d-1bf3-4156-b43a-36eda2493933"
 
 	err = Storage.NewRefreshSession(context.Background(),
 		*refreshToken,
@@ -39,13 +40,13 @@ func TestValidateRefreshToken(t *testing.T) {
 		{
 			testName:      "not found case",
 			refreshToken:  "",
-			userID:        "855ef14d-1bf3-4156-b43a-36eda2493933",
+			userID:        userID,
 			expectedError: storage.ErrRefreshTokenNotFound,
 		},
 		{
 			testName:      "invalid refresh token case",
-			refreshToken:  "62ff97621d7a0d0178f5204ed80b0bf9750dd0982e6da3033f4c7f4cc08be4f1",
-			userID:        "855ef14d-1bf3-4156-b43a-36eda2493933",
+			refreshToken:  refreshTokenPrepared,
+			userID:        userID,
 			expectedError: tokens.ErrInvalidRefreshToken,
 		},
 	}

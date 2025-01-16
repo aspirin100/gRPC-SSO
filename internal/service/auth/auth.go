@@ -16,7 +16,11 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidCredentials   = errors.New("invalid credentials")
+	ErrInvalidPassword      = errors.New("wrong password")
+	ErrUserExists           = errors.New("user already exists")
+	ErrRefreshTokenNotFound = errors.New("refresh token not found")
+	ErrInvalidRefreshToken  = errors.New("invalid refresh token")
 )
 
 type Auth struct {
@@ -52,7 +56,7 @@ type AppProvider interface {
 
 type RefreshSessionManager interface {
 	NewRefreshSession(ctx context.Context,
-		userID, refreshToken string, refreshTTL time.Duration) error
+		refreshToken, userID string, refreshTTL time.Duration) error
 	ValidateRefreshToken(ctx context.Context, userID, refreshToken string) error
 }
 
@@ -87,11 +91,11 @@ func (a *Auth) RegisterUser(ctx context.Context,
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			logg.Warn("user already exists", sl.Err(err))
-			return nil, fmt.Errorf("user already exists: %w", storage.ErrUserExists)
+			return nil, ErrUserExists
 		}
 
 		logg.Error("SaveUser error", sl.Err(err))
-		return nil, fmt.Errorf("failed to save new user: %w", ErrInvalidCredentials)
+		return nil, fmt.Errorf("failed to save new user: %w", err)
 	}
 
 	return &userID, nil
@@ -110,24 +114,23 @@ func (a *Auth) Login(ctx context.Context,
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			logg.Info("user not found", sl.Err(err))
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
 		}
 
 		logg.Error("failed to get user", sl.Err(err))
-		return nil, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+		return nil, ErrInvalidCredentials
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.PassHash, []byte(password))
 	if err != nil {
 		logg.Info("invalid credentials", sl.Err(err))
-		return nil, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+		return nil, ErrInvalidPassword
 	}
 
 	app, err := a.authManager.GetApp(ctx, appID)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
 			logg.Error("app not found", sl.Err(err))
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 
 		logg.Error("failed to get app", sl.Err(err))
@@ -185,15 +188,12 @@ func (a *Auth) RefreshTokenPair(
 	err := a.authManager.ValidateRefreshToken(ctx, userID, refreshToken)
 	if err != nil {
 		switch {
-		case errors.Is(err, storage.ErrUserNotFound):
-			logg.Info("user not found", sl.Err(err))
-			return nil, storage.ErrUserNotFound
 		case errors.Is(err, storage.ErrRefreshTokenNotFound):
 			logg.Info("refresh token not found", sl.Err(err))
-			return nil, storage.ErrRefreshTokenNotFound
+			return nil, ErrRefreshTokenNotFound
 		case errors.Is(err, tokens.ErrInvalidRefreshToken):
 			logg.Info("refresh token is invalid", sl.Err(err))
-			return nil, tokens.ErrInvalidRefreshToken
+			return nil, ErrInvalidRefreshToken
 		default:
 			logg.Error("validate refresh token error", sl.Err(err))
 			return nil, fmt.Errorf("%s: %w", op, err)
@@ -211,8 +211,8 @@ func (a *Auth) RefreshTokenPair(
 	}
 
 	// inserts new refresh token into database (refresh_session table)
-	err = a.authManager.NewRefreshSession(ctx, userID,
-		*newRefreshToken, a.refreshTTL)
+	err = a.authManager.NewRefreshSession(ctx,
+		*newRefreshToken, userID, a.refreshTTL)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

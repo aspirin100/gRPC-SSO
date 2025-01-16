@@ -2,10 +2,13 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
+	authService "github.com/aspirin100/gRPC-SSO/internal/service/auth"
 	ssov1 "github.com/aspirin100/gRPC-SSO/protos/gen/go/sso"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -46,6 +49,10 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (
 		req.GetPassword(), req.GetAppID())
 	if err != nil {
 		switch {
+		case errors.Is(err, authService.ErrInvalidCredentials):
+			return nil, status.Error(codes.InvalidArgument, "wrong email or password")
+		case errors.Is(err, authService.ErrInvalidPassword):
+			return nil, status.Error(codes.InvalidArgument, "wrong password")
 		default:
 			return nil, status.Error(codes.Internal, "internal error")
 		}
@@ -68,6 +75,8 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 		req.GetPassword())
 	if err != nil {
 		switch {
+		case errors.Is(err, authService.ErrUserExists):
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		default:
 			return nil, status.Error(codes.Internal, "internal error")
 		}
@@ -88,6 +97,10 @@ func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequ
 		req.GetRefreshToken(), req.GetAppID())
 	if err != nil {
 		switch {
+		case errors.Is(err, authService.ErrRefreshTokenNotFound):
+			return nil, status.Error(codes.NotFound, "refresh token not found")
+		case errors.Is(err, authService.ErrInvalidRefreshToken):
+			return nil, status.Error(codes.PermissionDenied, "invalid refresh token")
 		default:
 			return nil, status.Error(codes.Internal, "internal error")
 		}
@@ -108,6 +121,8 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserID())
 	if err != nil {
 		switch {
+		case errors.Is(err, authService.ErrInvalidCredentials):
+			return nil, status.Error(codes.InvalidArgument, "wrong email or password")
 		default:
 			return nil, status.Error(codes.Internal, "internal error")
 		}

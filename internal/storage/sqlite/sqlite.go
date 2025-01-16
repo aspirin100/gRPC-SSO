@@ -44,12 +44,12 @@ func (s *Storage) SaveUser(ctx context.Context,
 	userID = uuid.NewString()
 	const op = "storage.sqlite3.SaveUser"
 
-	queryStatement, err := s.db.Prepare(SaveUserQuery)
-	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
-	_, err = queryStatement.ExecContext(ctx, userID, email, passHash)
+	_, err = s.db.ExecContext(
+		ctx,
+		SaveUserQuery,
+		userID,
+		email,
+		passHash)
 	if err != nil {
 		var sqliteErr sqlite3.Error
 
@@ -58,7 +58,7 @@ func (s *Storage) SaveUser(ctx context.Context,
 			return "", storage.ErrUserExists
 		}
 
-		return "", fmt.Errorf("failed to save user: %w", err)
+		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
 	return userID, nil
@@ -121,18 +121,14 @@ func (s *Storage) NewRefreshSession(
 	refreshTTL time.Duration) error {
 	const op = "storage.sqlite.NewRefreshSession"
 
-	queryStatement, err := s.db.Prepare(NewRefreshSessionQuery)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	_, err = queryStatement.ExecContext(
+	_, err := s.db.ExecContext(
 		ctx,
-		userID,
+		NewRefreshSessionQuery,
 		refreshToken,
+		userID,
 		time.Now().Add(refreshTTL).Unix())
 	if err != nil {
-		return fmt.Errorf("failed to create new refresh session: %w", err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
@@ -183,6 +179,6 @@ const (
 	refresh_session where refreshToken = ? AND userID = ?`
 	SetRefreshTokenUsedQuery = `update refresh_session set isUsed = true where refreshToken = ?`
 	NewRefreshSessionQuery   = `insert into
-	refresh_session(userID, refreshToken, expiresAt)
+	refresh_session(refreshToken, userID, expiresAt)
 	values(?, ?, ?)`
 )
