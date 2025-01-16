@@ -55,7 +55,7 @@ func (s *Storage) SaveUser(ctx context.Context,
 
 		if errors.As(err, &sqliteErr) &&
 			sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return "", fmt.Errorf("%s: %w", op, storage.ErrUserExists)
+			return "", storage.ErrUserExists
 		}
 
 		return "", fmt.Errorf("failed to save user: %w", err)
@@ -175,7 +175,7 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 }
 
 const (
-	SaveUserQuery             = `insert into users(userID, email, passHash) values(?, ?, ?)`
+	SaveUserQuery             = `insert into users(id, email, passHash) values(?, ?, ?)`
 	GetUserQuery              = `select (userID, email, passHash) from users where email = ?`
 	IsAdminQuery              = `select (isAdmin) from users where userID = ?`
 	GetAppQuery               = `select (id, name) from apps where id = ?`
