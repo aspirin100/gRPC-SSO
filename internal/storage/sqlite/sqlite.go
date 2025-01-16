@@ -95,7 +95,7 @@ func (s *Storage) IsAdmin(ctx context.Context, userID string) (*bool, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return nil, nil
+	return &isAdmin, nil
 }
 
 func (s *Storage) GetApp(ctx context.Context, appID int32) (*entity.App, error) {
@@ -103,10 +103,10 @@ func (s *Storage) GetApp(ctx context.Context, appID int32) (*entity.App, error) 
 
 	app := entity.App{}
 
-	err := s.db.GetContext(ctx, &app, GetUserQuery, appID)
+	err := s.db.GetContext(ctx, &app, GetAppQuery, appID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
+			return nil, storage.ErrAppNotFound
 		}
 
 		return nil, fmt.Errorf("%s: %w", op, err)

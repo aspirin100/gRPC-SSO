@@ -85,7 +85,7 @@ func TestIsAdmin(t *testing.T) {
 	}{
 		{
 			testName:    "ok case",
-			userID:      "de31e37e-686a-4c7c-92b1-cb9ae5f1b953",
+			userID:      "4f1eb1b5-0520-4917-b865-3f2d460f9603",
 			expectedErr: nil,
 		},
 		{
@@ -99,6 +99,34 @@ func TestIsAdmin(t *testing.T) {
 		t.Run(tcase.testName, func(t *testing.T) {
 			_, err := Storage.IsAdmin(context.Background(),
 				tcase.userID)
+
+			require.EqualValues(t, tcase.expectedErr, err)
+		})
+	}
+}
+
+func TestGetApp(t *testing.T) {
+	cases := []struct {
+		testName    string
+		appID       int32
+		expectedErr error
+	}{
+		{
+			testName:    "ok case",
+			appID:       1,
+			expectedErr: nil,
+		},
+		{
+			testName:    "app not found case",
+			appID:       0,
+			expectedErr: storage.ErrAppNotFound,
+		},
+	}
+
+	for _, tcase := range cases {
+		t.Run(tcase.testName, func(t *testing.T) {
+			_, err := Storage.GetApp(context.Background(),
+				tcase.appID)
 
 			require.EqualValues(t, tcase.expectedErr, err)
 		})

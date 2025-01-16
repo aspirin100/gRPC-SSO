@@ -8,8 +8,8 @@ CREATE INDEX IF NOT EXISTS idx_email ON users (email);
 
 CREATE TABLE IF NOT EXISTS refresh_session
 (
-    userID uuid PRIMARY KEY,
-    refreshToken BLOB NOT NULL,
+    userID uuid NOT NULL,
+    refreshToken BLOB NOT NULL PRIMARY KEY,
     expiresAt timestamptz NOT NULL,
     isUsed BOOL DEFAULT FALSE,
     FOREIGN KEY (userID) REFERENCES users(id)
