@@ -130,7 +130,7 @@ func (s *Storage) NewRefreshSession(
 		ctx,
 		userID,
 		refreshToken,
-		time.Now().Add(refreshTTL))
+		time.Now().Add(refreshTTL).Unix())
 	if err != nil {
 		return fmt.Errorf("failed to create new refresh session: %w", err)
 	}
@@ -142,8 +142,8 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 	const op = "storage.sqlite.ValidateRefreshToken"
 
 	result := struct {
-		expiresAt time.Time `db:"expiresAt"`
-		isUsed    bool      `db:"isUsed"`
+		ExpiresAt int64 `db:"expiresAt"`
+		IsUsed    bool  `db:"isUsed"`
 	}{}
 
 	err := s.db.GetContext(ctx,
@@ -152,17 +152,17 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 		refreshToken, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("%s: %w", op, storage.ErrRefreshTokenNotFound)
+			return storage.ErrRefreshTokenNotFound
 		}
 
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if result.isUsed {
+	if result.IsUsed {
 		return tokens.ErrInvalidRefreshToken
 	}
-	if time.Now().Compare(result.expiresAt) == 1 ||
-		time.Now().Compare(result.expiresAt) == 0 {
+
+	if time.Now().Unix() >= result.ExpiresAt {
 		return tokens.ErrInvalidRefreshToken
 	}
 
@@ -179,9 +179,9 @@ const (
 	GetUserQuery              = `select id, email, passHash from users where email = ?`
 	IsAdminQuery              = `select isAdmin from users where id = ?`
 	GetAppQuery               = `select id, name from apps where id = ?`
-	ValidateRefreshTokenQuery = `select expiresAt, isUsed from refresh_session
-	where refreshToken = ? AND userID = ?`
-	SetRefreshTokenUsedQuery = `update table refresh_session set isUsed = true where refreshToken = ?`
+	ValidateRefreshTokenQuery = `select expiresAt, isUsed from
+	refresh_session where refreshToken = ? AND userID = ?`
+	SetRefreshTokenUsedQuery = `update refresh_session set isUsed = true where refreshToken = ?`
 	NewRefreshSessionQuery   = `insert into
 	refresh_session(userID, refreshToken, expiresAt)
 	values(?, ?, ?)`
