@@ -84,12 +84,12 @@ func (s *Storage) GetUser(ctx context.Context, email string) (*entity.User, erro
 func (s *Storage) IsAdmin(ctx context.Context, userID string) (*bool, error) {
 	const op = "storage.sqlite.GetUser"
 
-	var isAdmin *bool
+	var isAdmin bool
 
-	err := s.db.GetContext(ctx, isAdmin, IsAdminQuery, userID)
+	err := s.db.GetContext(ctx, &isAdmin, IsAdminQuery, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+			return nil, storage.ErrUserNotFound
 		}
 
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -177,7 +177,7 @@ func (s *Storage) ValidateRefreshToken(ctx context.Context, refreshToken, userID
 const (
 	SaveUserQuery             = `insert into users(id, email, passHash) values(?, ?, ?)`
 	GetUserQuery              = `select id, email, passHash from users where email = ?`
-	IsAdminQuery              = `select isAdmin from users where userID = ?`
+	IsAdminQuery              = `select isAdmin from users where id = ?`
 	GetAppQuery               = `select id, name from apps where id = ?`
 	ValidateRefreshTokenQuery = `select expiresAt, isUsed from refresh_session
 	where refreshToken = ? AND userID = ?`

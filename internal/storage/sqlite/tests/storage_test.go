@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aspirin100/gRPC-SSO/internal/storage"
@@ -60,7 +61,7 @@ func TestGetUser(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			testName:    "user exists case",
+			testName:    "user not found case",
 			email:       "wrong-test-mail",
 			expectedErr: storage.ErrUserNotFound,
 		},
@@ -70,6 +71,34 @@ func TestGetUser(t *testing.T) {
 		t.Run(tcase.testName, func(t *testing.T) {
 			_, err := Storage.GetUser(context.Background(),
 				tcase.email)
+
+			require.EqualValues(t, tcase.expectedErr, err)
+		})
+	}
+}
+
+func TestIsAdmin(t *testing.T) {
+	cases := []struct {
+		testName    string
+		userID      string
+		expectedErr error
+	}{
+		{
+			testName:    "ok case",
+			userID:      "de31e37e-686a-4c7c-92b1-cb9ae5f1b953",
+			expectedErr: nil,
+		},
+		{
+			testName:    "user not found case",
+			userID:      uuid.Nil.String(),
+			expectedErr: storage.ErrUserNotFound,
+		},
+	}
+
+	for _, tcase := range cases {
+		t.Run(tcase.testName, func(t *testing.T) {
+			_, err := Storage.IsAdmin(context.Background(),
+				tcase.userID)
 
 			require.EqualValues(t, tcase.expectedErr, err)
 		})
