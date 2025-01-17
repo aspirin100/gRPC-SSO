@@ -19,6 +19,7 @@ func New(
 	storagePath string,
 	refreshTTL,
 	accessTTL time.Duration,
+	secretKey string,
 ) *App {
 	storage, err := sqlite.New(logg, storagePath)
 	if err != nil {
@@ -26,7 +27,11 @@ func New(
 	}
 
 	// service layer constructor
-	authService := auth.New(logg, storage, accessTTL, refreshTTL)
+	authService := auth.New(
+		logg,
+		storage,
+		accessTTL, refreshTTL,
+		secretKey)
 
 	// business logic layer constructor
 	grpcApp := grpcApp.New(logg, authService, port)

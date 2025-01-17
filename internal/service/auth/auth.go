@@ -63,13 +63,15 @@ type RefreshSessionManager interface {
 func New(logg *slog.Logger,
 	authManager AuthManager,
 	accessTTL,
-	refreshTTL time.Duration) *Auth {
+	refreshTTL time.Duration,
+	secretKey string) *Auth {
 
 	return &Auth{
 		logg:        logg,
 		authManager: authManager,
 		accessTTL:   accessTTL,
 		refreshTTL:  refreshTTL,
+		secretKey:   secretKey,
 	}
 }
 

@@ -3,6 +3,7 @@ module github.com/aspirin100/gRPC-SSO
 go 1.23.3
 
 require (
+	github.com/brianvoe/gofakeit/v7 v7.1.2
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/google/uuid v1.6.0

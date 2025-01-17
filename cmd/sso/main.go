@@ -20,9 +20,10 @@ func main() {
 
 	logg := setupLogger(cfg.Env)
 	logg.Info("logger setuped", slog.String("env", cfg.Env))
+	logg.Info("current secret key", slog.String("sKey", cfg.SecretKey))
 
 	app := app.New(logg, cfg.GRPC.Port,
-		cfg.StoragePath, cfg.RefreshTTL, cfg.AccessTTL)
+		cfg.StoragePath, cfg.RefreshTTL, cfg.AccessTTL, cfg.SecretKey)
 
 	go app.GRPCServer.Run()
 

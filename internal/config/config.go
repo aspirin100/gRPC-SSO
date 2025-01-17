@@ -13,8 +13,8 @@ type Config struct {
 	StoragePath string        `yaml:"storage_path" env:"STORAGE_PATH" env-required:"true"`
 	AccessTTL   time.Duration `yaml:"accessTokenTTL" env:"ACCESS_TTL" env-default:"60m"`
 	RefreshTTL  time.Duration `yaml:"refreshTokenTTL" env:"REFRESH_TTL" env-default:"43200m"`
-	SecretKey   string        `env:"SECRET_KEY" env-required:"true"` // not safe to save in config file
 	GRPC        GRPCConfig    `yaml:"grpc" env:"GRPC"`
+	SecretKey   string        `env:"SECRET_KEY" env-required:"true"` // not safe to save in config file
 }
 
 type GRPCConfig struct {
@@ -44,7 +44,7 @@ func MustLoadByPath(configPath string) *Config {
 
 	err = cleanenv.ReadConfig(configPath, &config)
 	if err != nil {
-		panic("failed to read config" + err.Error())
+		panic("failed to read config " + err.Error())
 	}
 
 	return &config
