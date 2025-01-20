@@ -6,7 +6,7 @@ COPY . /app/go/grpc-sso
 
 WORKDIR /app/go/grpc-sso
 
-RUN make docker-build
+RUN make docker-build-app
 
 FROM alpine:3.21.2
 

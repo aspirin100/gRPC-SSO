@@ -10,7 +10,7 @@ migrations-up:
 	--storage-path ./internal/storage/sqlite/sso.db \
 	--migrations-path  ./internal/storage/migrations
 
-.PHONY: docker-build
+.PHONY: docker-build-app
 docker-build:
 	mkdir -p bin
 	CGO_ENABLED=1  GOOS=linux GOARCH=amd64 go build -o ./bin/sso-app.out ./cmd/sso/main.go 
@@ -29,7 +29,7 @@ lint:
 docker-up:
 	docker build -t sso .
 	docker run --rm -d \
-	-e SECRET_KEY="secret_key" \
+	-e SECRET_KEY="default_secret_key" \
 	-e STORAGE_PATH="sso.db" \
 	-e CONFIG_PATH="config.yaml" \
 	-p 443:443 sso
