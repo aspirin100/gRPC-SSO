@@ -1,17 +1,17 @@
 ## gRPC SSO service
 
-That is simple service you can integrate in your
-own project if you want jwt authentication(access, refresh)
-mechanism in it.
+Simple SSO service with jwt mechanism(access, refresh) you
+can integrate in your projects
 
 
 ## Usage
 
 requirements:
 - Docker
-- Postman(for requests)
+- Postman(for requests): optional
 
-At first, you need to add your application into database using migrations:
+At first, you need to add your application into database
+using migrations:
 
 migration example(up):
 ```sql
