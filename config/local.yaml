@@ -1,6 +1,6 @@
 env: "local"
 
-storage_path: "./internal/storage/sqlite/sso.db"
+storagePath: "./internal/storage/sqlite/sso.db"
 
 accessTokenTTL: 60m
 refreshTokenTTL: 43200m #30 days

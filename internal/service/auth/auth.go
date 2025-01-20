@@ -38,7 +38,7 @@ type AuthManager interface {
 	RefreshSessionManager
 }
 
-// storage interfaces
+// storage interfaces.
 type UserSaver interface {
 	SaveUser(ctx context.Context,
 		email string,
@@ -65,7 +65,6 @@ func New(logg *slog.Logger,
 	accessTTL,
 	refreshTTL time.Duration,
 	secretKey string) *Auth {
-
 	return &Auth{
 		logg:        logg,
 		authManager: authManager,
@@ -86,6 +85,7 @@ func (a *Auth) RegisterUser(ctx context.Context,
 	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		logg.Error("hashing error", sl.Err(err))
+
 		return nil, fmt.Errorf("password hashing error: %w", err)
 	}
 
@@ -93,10 +93,12 @@ func (a *Auth) RegisterUser(ctx context.Context,
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			logg.Warn("user already exists", sl.Err(err))
-			return nil, ErrUserExists
+
+			return nil, ErrUserExists //nolint:wrapcheck
 		}
 
 		logg.Error("SaveUser error", sl.Err(err))
+
 		return nil, fmt.Errorf("failed to save new user: %w", err)
 	}
 
@@ -119,23 +121,27 @@ func (a *Auth) Login(ctx context.Context,
 		}
 
 		logg.Error("failed to get user", sl.Err(err))
-		return nil, ErrInvalidCredentials
+
+		return nil, ErrInvalidCredentials //nolint:wrapcheck
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.PassHash, []byte(password))
 	if err != nil {
 		logg.Info("invalid credentials", sl.Err(err))
-		return nil, ErrInvalidPassword
+
+		return nil, ErrInvalidPassword //nolint:wrapcheck
 	}
 
 	app, err := a.authManager.GetApp(ctx, appID)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
 			logg.Error("app not found", sl.Err(err))
+
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 
 		logg.Error("failed to get app", sl.Err(err))
+
 		return nil, fmt.Errorf("failed to get app: %w", err)
 	}
 
@@ -173,6 +179,7 @@ func (a *Auth) IsAdmin(ctx context.Context, userID string) (
 	isAdmin, err := a.authManager.IsAdmin(ctx, userID)
 	if err != nil {
 		logg.Error("checking if user is admin failed", sl.Err(err))
+
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -192,12 +199,15 @@ func (a *Auth) RefreshTokenPair(
 		switch {
 		case errors.Is(err, storage.ErrRefreshTokenNotFound):
 			logg.Info("refresh token not found", sl.Err(err))
-			return nil, ErrRefreshTokenNotFound
+
+			return nil, ErrRefreshTokenNotFound //nolint:wrapcheck
 		case errors.Is(err, tokens.ErrInvalidRefreshToken):
 			logg.Info("refresh token is invalid", sl.Err(err))
-			return nil, ErrInvalidRefreshToken
+
+			return nil, ErrInvalidRefreshToken //nolint:wrapcheck
 		default:
 			logg.Error("validate refresh token error", sl.Err(err))
+
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 	}

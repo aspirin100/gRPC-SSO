@@ -34,9 +34,9 @@ func New(
 		secretKey)
 
 	// business logic layer constructor
-	grpcApp := grpcApp.New(logg, authService, port)
+	grpcApplication := grpcApp.New(logg, authService, port)
 
 	return &App{
-		GRPCServer: grpcApp,
+		GRPCServer: grpcApplication,
 	}
 }

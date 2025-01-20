@@ -1,4 +1,4 @@
-package grpcApp
+package grpcApp //nolint:stylecheck
 
 import (
 	"fmt"
@@ -42,6 +42,7 @@ func (a *App) Run() error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
 		logg.Error("net.Listen error: %w", sl.Err(err))
+
 		return fmt.Errorf("%s:%w", op, err)
 	}
 
@@ -51,6 +52,7 @@ func (a *App) Run() error {
 	err = a.gRPCServer.Serve(listener)
 	if err != nil {
 		logg.Error("grpc serving error: %w", sl.Err(err))
+
 		return fmt.Errorf("failed to run grpc server: %w", err)
 	}
 

@@ -10,11 +10,11 @@ import (
 
 type Config struct {
 	Env         string        `yaml:"env" env:"ENV" env-default:"local"`
-	StoragePath string        `yaml:"storage_path" env:"STORAGE_PATH" env-required:"true"`
-	AccessTTL   time.Duration `yaml:"accessTokenTTL" env:"ACCESS_TTL" env-default:"60m"`
-	RefreshTTL  time.Duration `yaml:"refreshTokenTTL" env:"REFRESH_TTL" env-default:"43200m"`
+	StoragePath string        `yaml:"storagePath" env:"STORAGE_PATH" env-required:"true"`
+	AccessTTL   time.Duration `yaml:"accessTokenTTL" env:"ACCESS_TTL" env-default:"60m"`      //nolint:tagliatelle
+	RefreshTTL  time.Duration `yaml:"refreshTokenTTL" env:"REFRESH_TTL" env-default:"43200m"` //nolint:tagliatelle
 	GRPC        GRPCConfig    `yaml:"grpc" env:"GRPC"`
-	SecretKey   string        `env:"SECRET_KEY" env-required:"true"` // not safe to save in config file
+	SecretKey   string        `env:"SECRET_KEY" env-required:"true"` // not safe to save in config file.
 }
 
 type GRPCConfig struct {
@@ -23,7 +23,6 @@ type GRPCConfig struct {
 }
 
 func MustLoad() *Config {
-
 	path := fetchConfigPath()
 	if path == "" {
 		panic("config path is empty")
@@ -32,9 +31,8 @@ func MustLoad() *Config {
 	return MustLoadByPath(path)
 }
 
-// helpful for tests
+// helpful for tests.
 func MustLoadByPath(configPath string) *Config {
-
 	_, err := os.Stat(configPath)
 	if os.IsNotExist(err) {
 		panic("config file doesn't exist: " + configPath)

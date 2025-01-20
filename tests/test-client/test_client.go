@@ -1,4 +1,4 @@
-package test_client
+package testClient //nolint:stylecheck
 
 import (
 	"context"

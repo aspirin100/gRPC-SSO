@@ -19,7 +19,7 @@ const (
 	passwordMaxLen = 16
 )
 
-// service layer interface
+// service layer interface.
 type Auth interface {
 	Login(ctx context.Context, email, password string, appID int32) (
 		*entity.TokenPair, error)
@@ -38,7 +38,7 @@ func RegisterAuthServer(gRPC *grpc.Server, auth Auth) {
 	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
 }
 
-func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (
+func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) ( //nolint:dupl
 	*ssov1.NewTokenPairResponse, error) {
 	err := validateLogin(req)
 	if err != nil {
@@ -50,11 +50,11 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrInvalidCredentials):
-			return nil, status.Error(codes.InvalidArgument, "wrong email or password")
+			return nil, status.Error(codes.InvalidArgument, "wrong email or password") 
 		case errors.Is(err, authService.ErrInvalidPassword):
-			return nil, status.Error(codes.InvalidArgument, "wrong password")
+			return nil, status.Error(codes.InvalidArgument, "wrong password") 
 		default:
-			return nil, status.Error(codes.Internal, "internal error")
+			return nil, status.Error(codes.Internal, "internal error") 
 		}
 	}
 
@@ -76,17 +76,18 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrUserExists):
-			return nil, status.Error(codes.AlreadyExists, "user already exists")
+			return nil, status.Error(codes.AlreadyExists, "user already exists") 
 		default:
-			return nil, status.Error(codes.Internal, "internal error")
+			return nil, status.Error(codes.Internal, "internal error") 
 		}
 	}
+
 	return &ssov1.RegisterRespons{
 		UserID: *userID,
 	}, nil
 }
 
-func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequest) (
+func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequest) ( //nolint:dupl
 	*ssov1.NewTokenPairResponse, error) {
 	err := validateRefreshRequest(req)
 	if err != nil {
@@ -98,11 +99,11 @@ func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequ
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrRefreshTokenNotFound):
-			return nil, status.Error(codes.NotFound, "refresh token not found")
+			return nil, status.Error(codes.NotFound, "refresh token not found") 
 		case errors.Is(err, authService.ErrInvalidRefreshToken):
-			return nil, status.Error(codes.PermissionDenied, "invalid refresh token")
+			return nil, status.Error(codes.PermissionDenied, "invalid refresh token") 
 		default:
-			return nil, status.Error(codes.Internal, "internal error")
+			return nil, status.Error(codes.Internal, "internal error") 
 		}
 	}
 
@@ -115,16 +116,16 @@ func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequ
 func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (
 	*ssov1.IsAdminResponse, error) {
 	if req.GetUserID() == "" {
-		return nil, status.Error(codes.InvalidArgument, "user id is required")
+		return nil, status.Error(codes.InvalidArgument, "user id is required") 
 	}
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserID())
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrInvalidCredentials):
-			return nil, status.Error(codes.InvalidArgument, "wrong email or password")
+			return nil, status.Error(codes.InvalidArgument, "wrong email or password") 
 		default:
-			return nil, status.Error(codes.Internal, "internal error")
+			return nil, status.Error(codes.Internal, "internal error") 
 		}
 	}
 
@@ -134,7 +135,6 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (
 }
 
 func validateLogin(req *ssov1.LoginRequest) error {
-
 	if req.GetEmail() == "" {
 		return status.Error(codes.InvalidArgument, "email is required")
 	}

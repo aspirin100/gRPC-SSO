@@ -30,6 +30,7 @@ func New(logg *slog.Logger, storagePath string) (*Storage, error) {
 	db, err := sqlx.Open("sqlite3", storagePath)
 	if err != nil {
 		log.Error("db open error", sl.Err(err))
+		
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
@@ -42,6 +43,7 @@ func (s *Storage) SaveUser(ctx context.Context,
 	email string,
 	passHash []byte) (userID string, err error) {
 	userID = uuid.NewString()
+
 	const op = "storage.sqlite3.SaveUser"
 
 	_, err = s.db.ExecContext(

@@ -17,7 +17,6 @@ const StoragePath = "../sso.db"
 var Storage, _ = sqlite.New(slog.Default(), StoragePath)
 
 func TestSaveUser(t *testing.T) {
-
 	cases := []struct {
 		testName    string
 		email       string
@@ -46,7 +45,6 @@ func TestSaveUser(t *testing.T) {
 			require.EqualValues(t, tcase.expectedErr, err)
 		})
 	}
-
 }
 
 func TestGetUser(t *testing.T) {

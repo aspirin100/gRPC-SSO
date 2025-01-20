@@ -1,6 +1,7 @@
 package tokens
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -11,6 +12,10 @@ import (
 
 var (
 	ErrInvalidRefreshToken = errors.New("refresh token is expired")
+)
+
+const (
+	RefreshTokenBytesLen = 32
 )
 
 func NewAccessToken(userID string,
@@ -35,17 +40,17 @@ func NewAccessToken(userID string,
 }
 
 func NewRefreshToken() (*string, error) {
-	randBytes := make([]byte, 32)
+	randBytes := make([]byte, RefreshTokenBytesLen)
 
 	src := rand.NewSource(time.Now().Unix())
-	r := rand.New(src)
+	r := rand.New(src) //nolint:gosec
 
 	_, err := r.Read(randBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	token := fmt.Sprintf("%x", randBytes)
+	token := hex.EncodeToString(randBytes)
 
 	return &token, nil
 }

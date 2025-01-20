@@ -22,10 +22,10 @@ func main() {
 	logg.Info("logger setuped", slog.String("env", cfg.Env))
 	logg.Info("current secret key", slog.String("sKey", cfg.SecretKey))
 
-	app := app.New(logg, cfg.GRPC.Port,
+	application := app.New(logg, cfg.GRPC.Port,
 		cfg.StoragePath, cfg.RefreshTTL, cfg.AccessTTL, cfg.SecretKey)
 
-	go app.GRPCServer.Run()
+	go application.GRPCServer.MustRun()
 
 	// graceful stop
 	stop := make(chan os.Signal, 1)
@@ -33,7 +33,7 @@ func main() {
 
 	<-stop
 
-	app.GRPCServer.GracefulStop()
+	application.GRPCServer.GracefulStop()
 
 	logg.Info("sso server stopped")
 }

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	emptyAppId          = 0
+	emptyAppID          = 0
 	appID               = 1
 	passwordWrongMaxLen = 17
 	passwordDefaultLen  = 10
@@ -47,16 +47,15 @@ func TestRegisterLogin(t *testing.T) {
 	var claims jwt.MapClaims
 
 	_, err = jwt.ParseWithClaims(
-		loginResponse.AccessToken,
+		loginResponse.GetAccessToken(),
 		&claims,
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(testSecretKey), nil
 		})
 	require.NoError(t, err)
 
-	require.EqualValues(t, appID, int(claims["appID"].(float64)))
-	require.EqualValues(t, registerReponse.UserID, claims["userID"].(string))
-
+	require.EqualValues(t, appID, int(claims["appID"].(float64)))                  //nolint:forcetypeassert
+	require.EqualValues(t, registerReponse.GetUserID(), claims["userID"].(string)) //nolint:forcetypeassert
 }
 
 func generatePassword(length int) string {

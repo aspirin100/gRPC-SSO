@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -22,8 +21,8 @@ func main() {
 	validateFlags(storagePath, migrationsPath)
 
 	mInstance, err := migrate.New(
-		fmt.Sprintf("file://%s", migrationsPath),
-		fmt.Sprintf("sqlite3://%s", storagePath),
+		"file://"+migrationsPath,
+		"sqlite3://"+storagePath,
 	)
 	if err != nil {
 		panic(err)
@@ -37,7 +36,6 @@ func main() {
 			panic(err)
 		}
 	}
-
 }
 
 func validateFlags(storagePath, migrationsPath string) {
