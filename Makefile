@@ -10,6 +10,11 @@ migrations-up:
 	--storage-path ./internal/storage/sqlite/sso.db \
 	--migrations-path  ./internal/storage/migrations
 
+.PHONY: docker-build
+build:
+	mkdir -p bin
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ./bin/sso-app.out ./cmd/sso/main.go 
+
 .PHONY: cover
 cover:
 		go test -short -race -coverprofile=coverage.out ./... 
@@ -19,3 +24,11 @@ cover:
 .PHONY: lint
 lint:
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run
+
+.PHONY: docker-up
+docker-up:
+	docker build -t sso .
+	docker run --rm -it \
+	-e SECRET_KEY="secret_key" \
+	-e STORAGE_PATH="/usr/local/bin" \
+	-p 443:443 sso
