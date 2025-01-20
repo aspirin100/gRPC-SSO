@@ -18,4 +18,4 @@ EXPOSE 443
 
 WORKDIR /usr/local/bin
 
-ENTRYPOINT sso-app.out --confpath="." 
+ENTRYPOINT sso-app.out

@@ -11,9 +11,9 @@ migrations-up:
 	--migrations-path  ./internal/storage/migrations
 
 .PHONY: docker-build
-build:
+docker-build:
 	mkdir -p bin
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ./bin/sso-app.out ./cmd/sso/main.go 
+	CGO_ENABLED=1  GOOS=linux GOARCH=amd64 go build -o ./bin/sso-app.out ./cmd/sso/main.go 
 
 .PHONY: cover
 cover:
@@ -28,7 +28,8 @@ lint:
 .PHONY: docker-up
 docker-up:
 	docker build -t sso .
-	docker run --rm -it \
+	docker run --rm -d \
 	-e SECRET_KEY="secret_key" \
-	-e STORAGE_PATH="/usr/local/bin" \
+	-e STORAGE_PATH="sso.db" \
+	-e CONFIG_PATH="config.yaml" \
 	-p 443:443 sso

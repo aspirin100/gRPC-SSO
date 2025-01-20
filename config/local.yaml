@@ -6,5 +6,5 @@ accessTokenTTL: 60m
 refreshTokenTTL: 43200m #30 days
 
 grpc:
-  port: 8000
+  port: 443
   timeout: 600m
