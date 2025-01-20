@@ -25,7 +25,8 @@ migrations example(down):
 DELETE FROM apps WHERE id = 1;
 ```
 
-**Important**! Migration name should look like
+### Important!
+Migration name should look like
 (int)*.up.sql and (int)*.down.sql respectively for one migration
 where (int) is migration number and * is arbitrary comment.
 
