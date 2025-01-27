@@ -6,7 +6,9 @@ import (
 	"net"
 
 	grpcAuth "github.com/aspirin100/gRPC-SSO/internal/grpc/auth"
+
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type App struct {
@@ -16,10 +18,18 @@ type App struct {
 	port       int
 }
 
-func New(logg *slog.Logger, authService grpcAuth.Auth, host string, port int) *App {
+func New(
+	logg *slog.Logger,
+	authService grpcAuth.Auth,
+	host string, port int,
+	enableReflection bool) *App {
 	gRPCServer := grpc.NewServer()
 
 	grpcAuth.RegisterAuthServer(gRPCServer, authService)
+
+	if enableReflection {
+		reflection.Register(gRPCServer)
+	}
 
 	return &App{
 		logg:       logg,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -27,10 +28,8 @@ func main() {
 
 	logg.Info("current secret key", slog.Int("length", len(cfg.SecretKey)))
 
-	appConfig := app.NewAppConfig(cfg)
-
-	application, err := app.New(logg, appConfig)
-	if err != nil {
+	application, err := setupApp(logg, cfg)
+	if err != nil{
 		logg.Debug("failed to create app instance", sl.Err(err))
 		os.Exit(1)
 	}
@@ -64,4 +63,21 @@ func setupLogger(env string) *slog.Logger {
 	}
 
 	return log
+}
+
+func setupApp(logg *slog.Logger, cfg *config.Config) (*app.App, error){
+	enableReflection := false
+
+	if cfg.Env == envLocal{
+		enableReflection = true
+	}
+	
+	appConfig := app.NewAppConfig(cfg, enableReflection)
+
+	appInstance, err := app.New(logg, appConfig)
+	if err != nil {
+		return nil, fmt.Errorf("app constructing fail: %w", err)
+	}
+	
+	return appInstance, nil
 }

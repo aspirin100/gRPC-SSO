@@ -22,6 +22,7 @@ type AppConfig struct {
 	refreshTTL  time.Duration
 	accessTTL   time.Duration
 	secretKey   string
+	reflection  bool
 }
 
 func New(
@@ -41,20 +42,23 @@ func New(
 		cfg.secretKey)
 
 	// business logic layer constructor
-	grpcApplication := grpcApp.New(logg, authService, cfg.host, cfg.port)
+	grpcApplication := grpcApp.New(logg,
+		authService, cfg.host, cfg.port, cfg.reflection)
+
 
 	return &App{
 		GRPCServer: grpcApplication,
 	}, nil
 }
 
-func NewAppConfig(cfg *config.Config) *AppConfig {
+func NewAppConfig(cfg *config.Config, reflection bool) *AppConfig {
 	appCfg := &AppConfig{
 		port:        cfg.GRPC.Port,
 		storagePath: cfg.StoragePath,
 		refreshTTL:  cfg.RefreshTTL,
 		accessTTL:   cfg.AccessTTL,
 		secretKey:   cfg.SecretKey,
+		reflection:  reflection,
 	}
 
 	return appCfg
