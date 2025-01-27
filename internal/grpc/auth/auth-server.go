@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 
 	"github.com/aspirin100/gRPC-SSO/internal/entity"
 	authService "github.com/aspirin100/gRPC-SSO/internal/service/auth"
@@ -50,11 +51,11 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) ( //noli
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrInvalidCredentials):
-			return nil, status.Error(codes.InvalidArgument, "wrong email or password") 
+			return nil, status.Error(codes.InvalidArgument, "wrong email or password")
 		case errors.Is(err, authService.ErrInvalidPassword):
-			return nil, status.Error(codes.InvalidArgument, "wrong password") 
+			return nil, status.Error(codes.InvalidArgument, "wrong password")
 		default:
-			return nil, status.Error(codes.Internal, "internal error") 
+			return nil, status.Error(codes.Internal, "internal error")
 		}
 	}
 
@@ -66,7 +67,7 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) ( //noli
 
 func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 	*ssov1.RegisterResponse, error) {
-	err := validateRegister(req)
+	err := validateEmailPass(req.GetEmail(), req.GetPassword())
 	if err != nil {
 		return nil, fmt.Errorf("register validation error: %w", err)
 	}
@@ -76,9 +77,9 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrUserExists):
-			return nil, status.Error(codes.AlreadyExists, "user already exists") 
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		default:
-			return nil, status.Error(codes.Internal, "internal error") 
+			return nil, status.Error(codes.Internal, "internal error")
 		}
 	}
 
@@ -99,11 +100,11 @@ func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequ
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrRefreshTokenNotFound):
-			return nil, status.Error(codes.NotFound, "refresh token not found") 
+			return nil, status.Error(codes.NotFound, "refresh token not found")
 		case errors.Is(err, authService.ErrInvalidRefreshToken):
-			return nil, status.Error(codes.PermissionDenied, "invalid refresh token") 
+			return nil, status.Error(codes.PermissionDenied, "invalid refresh token")
 		default:
-			return nil, status.Error(codes.Internal, "internal error") 
+			return nil, status.Error(codes.Internal, "internal error")
 		}
 	}
 
@@ -116,16 +117,16 @@ func (s *serverAPI) RefreshTokenPair(ctx context.Context, req *ssov1.RefreshRequ
 func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (
 	*ssov1.IsAdminResponse, error) {
 	if req.GetUserID() == "" {
-		return nil, status.Error(codes.InvalidArgument, "user id is required") 
+		return nil, status.Error(codes.InvalidArgument, "user id is required")
 	}
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserID())
 	if err != nil {
 		switch {
 		case errors.Is(err, authService.ErrInvalidCredentials):
-			return nil, status.Error(codes.InvalidArgument, "wrong email or password") 
+			return nil, status.Error(codes.InvalidArgument, "wrong email or password")
 		default:
-			return nil, status.Error(codes.Internal, "internal error") 
+			return nil, status.Error(codes.Internal, "internal error")
 		}
 	}
 
@@ -135,31 +136,31 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (
 }
 
 func validateLogin(req *ssov1.LoginRequest) error {
-	if req.GetEmail() == "" {
-		return status.Error(codes.InvalidArgument, "email is required")
-	}
-
-	if req.GetPassword() == "" {
-		return status.Error(codes.InvalidArgument, "password is required")
-	} else if len(req.GetPassword()) > passwordMaxLen {
-		return status.Error(codes.InvalidArgument, "password is too big")
+	err := validateEmailPass(req.GetEmail(), req.GetPassword())
+	if err != nil {
+		return fmt.Errorf("incorrect email or password: %w", err)
 	}
 
 	if req.GetAppID() == emptyValue {
-		return status.Error(codes.InvalidArgument, "app_id is required")
+		return status.Error(codes.InvalidArgument, "appID is required")
 	}
 
 	return nil
 }
 
-func validateRegister(req *ssov1.RegisterRequest) error {
-	if req.GetEmail() == "" {
+func validateEmailPass(email, password string) error {
+	if email == "" {
 		return status.Error(codes.InvalidArgument, "email is required")
+	} else {
+		_, err := mail.ParseAddress(email)
+		if err != nil {
+			return status.Error(codes.InvalidArgument, "wrong email format")
+		}
 	}
 
-	if req.GetPassword() == "" {
+	if password == "" {
 		return status.Error(codes.InvalidArgument, "password is required")
-	} else if len(req.GetPassword()) > passwordMaxLen {
+	} else if len(password) > passwordMaxLen {
 		return status.Error(codes.InvalidArgument, "password is too big")
 	}
 
