@@ -4,7 +4,7 @@ package auth;
 option go_package = "github.com/aspirin100/gRPC-SSO/protos/gen/go/sso;ssov1";
 
 service Auth{
-    rpc Register(RegisterRequest) returns (RegisterRespons);
+    rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc Login(LoginRequest) returns (NewTokenPairResponse);
     rpc IsAdmin(IsAdminRequest) returns (IsAdminResponse);
     rpc RefreshTokenPair(RefreshRequest) returns (NewTokenPairResponse);
@@ -15,7 +15,7 @@ message RegisterRequest{
     string password = 2;
 }
 
-message RegisterRespons{
+message RegisterResponse{
     string userID = 1; // UUID
 }
 
