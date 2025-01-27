@@ -1,4 +1,4 @@
-package storage_test
+package storage
 
 import (
 	"context"
@@ -9,12 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aspirin100/gRPC-SSO/internal/storage"
-	"github.com/aspirin100/gRPC-SSO/internal/storage/sqlite"
 )
 
 const StoragePath = "../sso.db"
 
-var Storage, _ = sqlite.New(slog.Default(), StoragePath)
+var Storage, _ = storage.New(slog.Default(), StoragePath)
 
 func TestSaveUser(t *testing.T) {
 	cases := []struct {

@@ -8,7 +8,7 @@ import (
 	grpcApp "github.com/aspirin100/gRPC-SSO/internal/app/grpc"
 	"github.com/aspirin100/gRPC-SSO/internal/config"
 	"github.com/aspirin100/gRPC-SSO/internal/service/auth"
-	"github.com/aspirin100/gRPC-SSO/internal/storage/sqlite"
+	"github.com/aspirin100/gRPC-SSO/internal/storage"
 )
 
 type App struct {
@@ -29,7 +29,7 @@ func New(
 	logg *slog.Logger,
 	cfg *AppConfig,
 ) (*App, error) {
-	storage, err := sqlite.New(logg, cfg.storagePath)
+	storage, err := storage.New(logg, cfg.storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct storage: %w", err)
 	}
