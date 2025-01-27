@@ -65,7 +65,7 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) ( //noli
 }
 
 func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
-	*ssov1.RegisterRespons, error) {
+	*ssov1.RegisterResponse, error) {
 	err := validateRegister(req)
 	if err != nil {
 		return nil, fmt.Errorf("register validation error: %w", err)
@@ -82,7 +82,7 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (
 		}
 	}
 
-	return &ssov1.RegisterRespons{
+	return &ssov1.RegisterResponse{
 		UserID: *userID,
 	}, nil
 }
