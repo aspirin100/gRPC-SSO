@@ -18,22 +18,23 @@ const (
 
 func main() {
 	cfg, err := config.Load()
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	logg := setupLogger(cfg.Env)
 	logg.Info("logger setuped", slog.String("env", cfg.Env))
-	
+
 	logg.Info("current secret key", slog.Int("length", len(cfg.SecretKey)))
 
-	application, err := app.New(logg, cfg.GRPC.Port,
-		cfg.StoragePath, cfg.RefreshTTL, cfg.AccessTTL, cfg.SecretKey)
-	if err != nil{
+	
+	appConfig := app.NewAppConfig(cfg)
+
+	application, err := app.New(logg, appConfig)
+	if err != nil {
 		logg.Debug("failed to create app instance", sl.Err(err))
 		os.Exit(1)
 	}
-
 
 	go application.GRPCServer.MustRun()
 
@@ -60,6 +61,8 @@ func setupLogger(env string) *slog.Logger {
 		log = slog.New(
 			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
 		)
+	default:
+		log = slog.Default()
 	}
 
 	return log
