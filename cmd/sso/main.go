@@ -27,7 +27,6 @@ func main() {
 
 	logg.Info("current secret key", slog.Int("length", len(cfg.SecretKey)))
 
-	
 	appConfig := app.NewAppConfig(cfg)
 
 	application, err := app.New(logg, appConfig)
@@ -45,7 +44,6 @@ func main() {
 	<-stop
 
 	application.GRPCServer.GracefulStop()
-
 	logg.Info("sso server stopped")
 }
 

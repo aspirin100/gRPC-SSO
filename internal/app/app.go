@@ -16,6 +16,7 @@ type App struct {
 }
 
 type AppConfig struct {
+	host        string
 	port        int
 	storagePath string
 	refreshTTL  time.Duration
@@ -40,7 +41,7 @@ func New(
 		cfg.secretKey)
 
 	// business logic layer constructor
-	grpcApplication := grpcApp.New(logg, authService, cfg.port)
+	grpcApplication := grpcApp.New(logg, authService, cfg.host, cfg.port)
 
 	return &App{
 		GRPCServer: grpcApplication,
