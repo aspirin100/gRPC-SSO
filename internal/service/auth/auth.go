@@ -84,8 +84,6 @@ func (a *Auth) RegisterUser(ctx context.Context,
 
 	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		logg.Error("hashing error", sl.Err(err))
-
 		return nil, fmt.Errorf("password hashing error: %w", err)
 	}
 
@@ -96,8 +94,6 @@ func (a *Auth) RegisterUser(ctx context.Context,
 
 			return nil, ErrUserExists //nolint:wrapcheck
 		}
-
-		logg.Error("SaveUser error", sl.Err(err))
 
 		return nil, fmt.Errorf("failed to save new user: %w", err)
 	}
@@ -120,8 +116,6 @@ func (a *Auth) Login(ctx context.Context,
 			logg.Info("user not found", sl.Err(err))
 		}
 
-		logg.Error("failed to get user", sl.Err(err))
-
 		return nil, ErrInvalidCredentials //nolint:wrapcheck
 	}
 
@@ -135,12 +129,10 @@ func (a *Auth) Login(ctx context.Context,
 	app, err := a.authManager.GetApp(ctx, appID)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
-			logg.Error("app not found", sl.Err(err))
+			logg.Warn("app not found", sl.Err(err))
 
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-
-		logg.Error("failed to get app", sl.Err(err))
 
 		return nil, fmt.Errorf("failed to get app: %w", err)
 	}
@@ -174,12 +166,8 @@ func (a *Auth) IsAdmin(ctx context.Context, userID string) (
 	*bool, error) {
 	const op = "service/auth.IsAdmin"
 
-	logg := a.logg.With(slog.String("op", op))
-
 	isAdmin, err := a.authManager.IsAdmin(ctx, userID)
 	if err != nil {
-		logg.Error("checking if user is admin failed", sl.Err(err))
-
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -206,7 +194,7 @@ func (a *Auth) RefreshTokenPair(
 
 			return nil, ErrInvalidRefreshToken //nolint:wrapcheck
 		default:
-			logg.Error("validate refresh token error", sl.Err(err))
+			logg.Warn("validate refresh token error", sl.Err(err))
 
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}

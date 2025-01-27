@@ -22,13 +22,13 @@ func New(
 	ctx context.Context,
 	addr string,
 	timeout time.Duration,
-	retriesCount int,
+	retriesCount uint,
 ) (*Client, error) {
 	const op = "grpclient.New"
 
 	retryOpts := []retry.CallOption{
 		retry.WithCodes(codes.NotFound, codes.Aborted, codes.DeadlineExceeded),
-		retry.WithMax(uint(retriesCount)),
+		retry.WithMax(retriesCount),
 		retry.WithPerRetryTimeout(timeout),
 	}
 

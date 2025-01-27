@@ -32,12 +32,12 @@ type GRPCConfig struct {
 func Load() (*Config, error) {
 	path := fetchConfigPath()
 	if path == "" {
-		return nil, ErrEmptyPath
+		return nil, ErrEmptyPath //nolint:wrapcheck
 	}
 
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		return nil, ErrConfigNotFound
+		return nil, ErrConfigNotFound //nolint:wrapcheck
 	}
 
 	var config Config
@@ -51,7 +51,6 @@ func Load() (*Config, error) {
 }
 
 func MustLoadByPath(path string) *Config {
-
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		panic(err)
