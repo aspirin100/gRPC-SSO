@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -20,10 +21,10 @@ func New(
 	refreshTTL,
 	accessTTL time.Duration,
 	secretKey string,
-) *App {
+) (*App, error) {
 	storage, err := sqlite.New(logg, storagePath)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to construct storage: %w", err)
 	}
 
 	// service layer constructor
@@ -38,5 +39,5 @@ func New(
 
 	return &App{
 		GRPCServer: grpcApplication,
-	}
+	}, nil
 }

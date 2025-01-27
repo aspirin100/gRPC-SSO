@@ -25,7 +25,7 @@ func main() {
 		"sqlite3://"+storagePath,
 	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	err = mInstance.Up()
@@ -33,7 +33,7 @@ func main() {
 		if errors.Is(err, migrate.ErrNoChange) {
 			log.Println("no changes")
 		} else {
-			panic(err)
+			log.Fatal(err)
 		}
 	}
 }

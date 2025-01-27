@@ -1,11 +1,18 @@
 package config
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
+)
+
+var (
+	ErrEmptyPath      = errors.New("empty path to configuration file")
+	ErrConfigNotFound = errors.New("config file not found")
 )
 
 type Config struct {
@@ -22,27 +29,39 @@ type GRPCConfig struct {
 	Timeout time.Duration `yaml:"timeout" env:"TIMEOUT" env-default:"300m"`
 }
 
-func MustLoad() *Config {
+func Load() (*Config, error) {
 	path := fetchConfigPath()
 	if path == "" {
-		panic("config path is empty")
+		return nil, ErrEmptyPath
 	}
 
-	return MustLoadByPath(path)
-}
-
-// helpful for tests.
-func MustLoadByPath(configPath string) *Config {
-	_, err := os.Stat(configPath)
+	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		panic("config file doesn't exist: " + configPath)
+		return nil, ErrConfigNotFound
 	}
 
 	var config Config
 
-	err = cleanenv.ReadConfig(configPath, &config)
+	err = cleanenv.ReadConfig(path, &config)
 	if err != nil {
-		panic("failed to read config " + err.Error())
+		return nil, fmt.Errorf("failed to read config: %w", err)
+	}
+
+	return &config, nil
+}
+
+func MustLoadByPath(path string) *Config {
+
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		panic(err)
+	}
+
+	var config Config
+
+	err = cleanenv.ReadConfig(path, &config)
+	if err != nil {
+		panic(err)
 	}
 
 	return &config

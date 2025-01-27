@@ -8,6 +8,7 @@ import (
 
 	"github.com/aspirin100/gRPC-SSO/internal/app"
 	"github.com/aspirin100/gRPC-SSO/internal/config"
+	"github.com/aspirin100/gRPC-SSO/pkg/logger/sl"
 )
 
 const (
@@ -16,14 +17,23 @@ const (
 )
 
 func main() {
-	cfg := config.MustLoad()
+	cfg, err := config.Load()
+	if err != nil{
+		panic(err)
+	}
 
 	logg := setupLogger(cfg.Env)
 	logg.Info("logger setuped", slog.String("env", cfg.Env))
-	logg.Info("current secret key", slog.String("sKey", cfg.SecretKey))
+	
+	logg.Info("current secret key", slog.Int("length", len(cfg.SecretKey)))
 
-	application := app.New(logg, cfg.GRPC.Port,
+	application, err := app.New(logg, cfg.GRPC.Port,
 		cfg.StoragePath, cfg.RefreshTTL, cfg.AccessTTL, cfg.SecretKey)
+	if err != nil{
+		logg.Debug("failed to create app instance", sl.Err(err))
+		os.Exit(1)
+	}
+
 
 	go application.GRPCServer.MustRun()
 
