@@ -27,7 +27,7 @@ DELETE FROM apps WHERE id = 1;
 
 ### Important!
 Migration name should look like
-(int)*.up.sql and (int)*.down.sql respectively for one migration
+**(int)*.up.sql and (int)*.down.sql** respectively for one migration
 where (int) is migration number and * is arbitrary comment.
 
 Then move your migrations into [migrations folder](/internal/storage/migrations/)
@@ -38,6 +38,25 @@ make migrations-up
 ```
 
 to apply changes.
+
+### Configuration
+
+example comfiguration file(.yaml):
+```yaml
+env: "local"
+
+storagePath: "./internal/storage/sqlite/sso.db"
+
+accessTokenTTL: 60m
+refreshTokenTTL: 43200m #30 days
+
+grpc:
+  port: 443
+  timeout: 600m
+  host: localhost
+```
+
+You can either set storage path in config file or environment variable **STORAGE_PATH**. 
 
 **To start service**:
 

@@ -36,7 +36,7 @@ func New(logg *slog.Logger, storagePath string) (*Storage, error) {
 	db, err := sqlx.Open("sqlite3", storagePath)
 	if err != nil {
 		log.Error("db open error", sl.Err(err))
-		
+
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
